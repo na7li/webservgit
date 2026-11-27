@@ -1,32 +1,33 @@
 #ifndef CONNECTION_HPP
-# define CONNECTION_HPP
-
-# include <string>
-
-# include "HttpRequest.hpp"
-
+#define CONNECTION_HPP
+#include "HttpRequest.hpp"
+#include "ServerConfig.hpp"
+#include "Cgi.hpp"
+#include <ctime>
 class Connection
 {
-	private:
-		int			_fd;
-		std::string	_incoming;
-		std::string	_outgoing;
-		bool		_responseReady;
-		HttpRequest	_request;
+    int _fd;
+    std::string _incoming, _outgoing;
+    size_t _sent;
+    bool _responseReady;
+    HttpRequest _request;
+    ServerConfig _config;
+    std::vector<ServerConfig> _configs;
+    Cgi *_cgi;
+    std::time_t _activity, _created;
+    std::string _remote;
+    Connection(const Connection &);
+    Connection &operator=(const Connection &);
+    void prepareResponse();
+    void prepareError(int code);
 
-		Connection(const Connection &other);
-		Connection &operator=(const Connection &other);
-
-		void	prepareResponse();
-		void	prepareError(int code, const std::string &reason);
-
-	public:
-		Connection(int fd);
-		~Connection();
-
-		bool	hasDataToSend() const;
-		bool	receive();
-		bool	sendData();
+  public:
+    Connection(int fd, const std::vector<ServerConfig> &configs, const std::string &remote);
+    ~Connection();
+    bool hasDataToSend() const;
+    bool wantsRead() const;
+    bool receive();
+    bool sendData();
+    bool tick();
 };
-
 #endif
